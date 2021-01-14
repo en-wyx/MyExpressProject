@@ -1,0 +1,97 @@
+#!/usr/bin/env node       
+/*************web服务器*************/
+
+/**
+ * Module dependencies.
+ */
+//依赖模块导入
+var app = require('../app');
+var debug = require('debug')('myexpressproject:server');
+var http = require('http');
+
+/**
+ * Get port from environment and store in Express.
+ */
+//从上下文环境中获得监听端口，如果空则3000
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+//创建Web服务器
+var server = http.createServer(app);
+/**
+ * 由于 express-ws 在默认不添加server 参数情况下，使用的是app.listen 创建的httpserver,
+ * 而express 脚手架将 app和server初始化分离了，所以需要再次配置express-ws
+ */
+var expressWs = require('express-ws')(app, server);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+//开始监听
+server.listen(port);
+server.on('error', onError);//指定发生错误时的事件
+server.on('listening', onListening);//当监听成功时的回调
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+//规范化端口
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+//错误事件监听
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  //错误处理
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);//结束程序
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+//当用户访问服务器成功时的回调
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
